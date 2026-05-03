@@ -58,6 +58,3 @@ def get_next_book_page():
 
         conn.commit()
         return book_no, page_no
-
-if __name__ == "__main__":
-    init_db()
