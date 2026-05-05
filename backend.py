@@ -1,11 +1,11 @@
-from PySide6.QtCore import QObject, Slot
-import db
-from Report_generation import generate_report
+from db import get_conn, get_next_book_page, init_db
+from report_generation import generate_report
 
 
-class Backend(QObject):
+class Backend:
+    def __init__(self):
+        init_db()
 
-    @Slot(str, str, str, str, str, str, str, str, str, str, str)
     def submit_form(
         self,
         purpose,
@@ -20,9 +20,9 @@ class Backend(QObject):
         receipt_no,
         receipt_date
     ):
-        book_no, page_no = db.get_next_book_page()
+        book_no, page_no = get_next_book_page()
 
-        with db.get_conn() as conn:
+        with get_conn() as conn:
             c = conn.cursor()
 
             c.execute("""
@@ -43,7 +43,7 @@ class Backend(QObject):
             report_id = c.lastrowid
             conn.commit()
 
-        pdf_path = generate_report(
+        pdf = generate_report(
             report_id,
             book_no,
             page_no,
@@ -60,4 +60,4 @@ class Backend(QObject):
             receipt_date
         )
 
-        print(f"Generated: {pdf_path}")
+        print("PDF Generated:", pdf)
