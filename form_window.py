@@ -66,14 +66,14 @@ class FormWindow(QWidget):
         if self.backend:
             self.backend.submit_form(
                 self.purpose.text(),
-                self.date.date().toString("yyyy-MM-dd"),
+                self.date.date().toString("dd-MM-yyyy"),
                 self.name.text(),
                 self.address.text(),
                 self.sanction_no.text(),
-                self.sanction_date.date().toString("yyyy-MM-dd"),
+                self.sanction_date.date().toString("dd-MM-yyyy"),
                 self.consumer_no.text(),
                 self.jen.currentText(),
                 self.work.toPlainText(),
                 self.receipt_no.text(),
-                self.receipt_date.date().toString("yyyy-MM-dd")
+                self.receipt_date.date().toString("dd-MM-yyyy")
             )
