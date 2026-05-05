@@ -1,22 +1,50 @@
 import sys
-from PySide6.QtWidgets import QApplication
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QPushButton,
+    QFormLayout, QLineEdit, QTextEdit, QComboBox
+)
+from PySide6.QtWidgets import QDateEdit
+from PySide6.QtCore import QDate
 
-import db
 from backend import Backend
+from view_window import ViewWindow
+from form_window import FormWindow
+from view_window import ViewWindow
 
-app = QApplication(sys.argv)
 
-db.init_db()
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
 
-engine = QQmlApplicationEngine()
+        self.backend = Backend()
 
-backend = Backend()
-engine.rootContext().setContextProperty("backend", backend)
+        self.setWindowTitle("Report Manager")
+        self.resize(300, 200)
 
-engine.load("ui/main.qml")
+        layout = QVBoxLayout()
 
-if not engine.rootObjects():
-    sys.exit(-1)
+        self.new_btn = QPushButton("New Report")
+        layout.addWidget(self.new_btn)
 
-sys.exit(app.exec())
+        self.setLayout(layout)
+
+        self.new_btn.clicked.connect(self.open_form)
+        self.view_btn = QPushButton("View Reports")
+        layout.addWidget(self.view_btn)
+
+        self.view_btn.clicked.connect(self.open_view)
+
+    def open_form(self):
+        self.form = FormWindow(self.backend)
+        self.form.show()
+
+    def open_view(self):
+        self.view = ViewWindow()
+        self.view.show()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
