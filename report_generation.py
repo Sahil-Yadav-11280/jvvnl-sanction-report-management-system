@@ -4,8 +4,8 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import letter
 
 
-def create_full_sundry_job_order(data: list, filename):
-    # 1. Setup the document layout and margins
+def generate_report(data: list, filename):
+    # 1. Set up the document layout and margins
     doc = SimpleDocTemplate(
         filename,
         pagesize=letter,
@@ -15,13 +15,13 @@ def create_full_sundry_job_order(data: list, filename):
         bottomMargin=72
     )
 
-    office = data[0]
-    book_no = data[1]
-    serial_no = data[2]
+    book_no = data[0]
+    serial_no = data[1]
+    office = data[2]
     to_jen = data[3]
     date = data[4]
     estimate = data[5]
-    work = data[6]
+    description = data[6]
     allocation = data[7]
     acc_no = data[8]
     cons_name_add = data[9]
@@ -82,7 +82,7 @@ def create_full_sundry_job_order(data: list, filename):
     # --- MIDDLE SECTION (Work Description) ---
     Story.append(Paragraph("Please execute the following work and on completion report as under: -", center_text_style))
     Story.append(Paragraph("DESCRIPTION OF WORK", bold_center_style))
-    Story.append(Paragraph(f"{work}", center_text_style))
+    Story.append(Paragraph(f"{description}", center_text_style))
 
     # Large vertical space to simulate the empty area for writing/data
     Story.append(Spacer(1, 80))
@@ -113,3 +113,4 @@ def create_full_sundry_job_order(data: list, filename):
     # 3. Build and save the document
     doc.build(Story)
     print(f"File created successfully at {filename}")
+    return filename
