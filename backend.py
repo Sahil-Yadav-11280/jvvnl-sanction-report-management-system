@@ -1,4 +1,4 @@
-from db import get_conn, get_next_book_page, init_db
+from db import get_conn, get_next_book_serial, init_db
 from report_generation import generate_report
 
 
@@ -8,56 +8,58 @@ class Backend:
 
     def submit_form(
         self,
-        purpose,
+        office,
         date,
-        name,
-        address,
-        sanction_no,
-        sanction_date,
-        consumer_no,
         jen,
-        work,
-        receipt_no,
-        receipt_date
+        estimate_no,
+        description,
+        allocation,
+        account_number,
+        consumer_name,
+        address,
+        service_no,
+        consumer_no
     ):
-        book_no, page_no = get_next_book_page()
+        # 🔢 Generate book + serial
+        book_no, serial_no = get_next_book_serial()
 
         with get_conn() as conn:
             c = conn.cursor()
 
             c.execute("""
             INSERT INTO reports (
-                book_no, page_no, purpose, date,
-                customer_name, address, sanction_number,
-                sanction_date, consumer_number, jen,
-                proposed_work, receipt_number, receipt_date
+                book_no, serial_no, office, jen, date,
+                estimate_no, description, allocation,
+                account_number, consumer_name, address,
+                service_no, consumer_no
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                book_no, page_no, purpose, date,
-                name, address, sanction_no,
-                sanction_date, consumer_no,
-                jen, work, receipt_no, receipt_date
+                book_no, serial_no, office, jen, date,
+                estimate_no, description, allocation,
+                account_number, consumer_name, address,
+                service_no, consumer_no
             ))
 
             report_id = c.lastrowid
             conn.commit()
 
-        pdf = generate_report(
-            report_id,
-            book_no,
-            page_no,
-            purpose,
-            date,
-            name,
-            address,
-            sanction_no,
-            sanction_date,
-            consumer_no,
-            jen,
-            work,
-            receipt_no,
-            receipt_date
-        )
+        # 📄 Generate PDF (FAST - reportlab)
+        data = {
+            "office": office,
+            "book_no": book_no,
+            "serial_no": serial_no,
+            "jen": jen,
+            "date": date,
+            "estimate_no": estimate_no,
+            "description": description,
+            "allocation": allocation,
+            "account_number": account_number,
+            "consumer_name_address": f"{consumer_name}, {address}",
+            "service_no": service_no,
+            "consumer_no": consumer_no
+        }
 
-        print("PDF Generated:", pdf)
+        pdf_file = generate_report(data, f"report_{report_id}.pdf")
+
+        print("PDF Generated:", pdf_file)
