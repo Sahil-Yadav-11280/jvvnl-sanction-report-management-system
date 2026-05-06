@@ -41,24 +41,10 @@ class Backend:
                 service_no, consumer_no
             ))
 
-            report_id = c.lastrowid
+            report_id = f'{book_no}_{serial_no}'
             conn.commit()
 
-        # 📄 Generate PDF (FAST - reportlab)
-        data = {
-            "office": office,
-            "book_no": book_no,
-            "serial_no": serial_no,
-            "jen": jen,
-            "date": date,
-            "estimate_no": estimate_no,
-            "description": description,
-            "allocation": allocation,
-            "account_number": account_number,
-            "consumer_name_address": f"{consumer_name}, {address}",
-            "service_no": service_no,
-            "consumer_no": consumer_no
-        }
+        data = [book_no , serial_no , office , jen , date , estimate_no , description , allocation , account_number , f'{consumer_name}, {address}' , service_no  , consumer_no]
 
         pdf_file = generate_report(data, f"report_{report_id}.pdf")
 
