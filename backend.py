@@ -18,11 +18,12 @@ class Backend:
         consumer_name,
         address,
         service_no,
-        consumer_no
+        consumer_no,
+        filepath,
     ):
-        # 🔢 Generate book + serial
-        book_no, serial_no = get_next_book_serial()
 
+
+        book_no , serial_no = get_next_book_serial()
         with get_conn() as conn:
             c = conn.cursor()
 
@@ -40,12 +41,10 @@ class Backend:
                 account_number, consumer_name, address,
                 service_no, consumer_no
             ))
-
-            report_id = f'{book_no}_{serial_no}'
             conn.commit()
 
         data = [book_no , serial_no , office , jen , date , estimate_no , description , allocation , account_number , f'{consumer_name}, {address}' , service_no  , consumer_no]
 
-        pdf_file = generate_report(data, f"report_{report_id}.pdf")
+        pdf_file = generate_report(data, filepath)
 
         print("PDF Generated:", pdf_file)
