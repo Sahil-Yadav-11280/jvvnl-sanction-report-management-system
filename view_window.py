@@ -13,7 +13,7 @@ class ViewWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("View Reports")
-        self.resize(900, 600)
+        self.resize(1200, 675)
 
         self.page = 0
         self.page_size = 20
