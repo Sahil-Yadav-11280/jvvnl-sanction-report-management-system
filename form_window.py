@@ -6,6 +6,7 @@ from PySide6.QtCore import QDate
 
 
 class FormWindow(QWidget):
+
     def __init__(self, backend):
         super().__init__()
 
@@ -61,7 +62,7 @@ class FormWindow(QWidget):
         if self.backend:
             self.backend.submit_form(
                 self.office.text(),
-                self.date.date().toString("yyyy-MM-dd"),  # ✅ important
+                self.date.date().toString("dd-MM-yyyy"),  # ✅ important
                 self.jen.currentText(),
                 self.estimate_no.text(),
                 self.description.toPlainText(),
