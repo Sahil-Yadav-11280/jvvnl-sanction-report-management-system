@@ -54,25 +54,43 @@ def get_next_book_serial():
     with get_conn() as conn:
         c = conn.cursor()
 
-        c.execute("SELECT value FROM meta WHERE key='last_serial'")
-        row = c.fetchone()
+        c.execute("SELECT value FROM meta")
+        row = c.fetchall()
 
-        last_serial = row[0] if row else 0
+        last_serial = row[0][0] if row else 0
+        book_no = row[1][0] if row else 1
 
         new_serial = last_serial + 1
-
-        # Every 100 → new book
-        book_no = (new_serial - 1) // 100 + 1
+        if new_serial > 100:
+            book_no+=1
+            new_serial-=100
 
         # Save updated serial
         c.execute("""
         INSERT OR REPLACE INTO meta (key, value)
-        VALUES ('last_serial', ?)
-        """, (new_serial,))
+        VALUES ('last_serial', ?) , ('last_book' , ?)
+        """, (new_serial,book_no))
 
         conn.commit()
 
         return book_no, new_serial
+
+def get_copy_book_serial():
+    with get_conn() as conn:
+        c = conn.cursor()
+
+        c.execute("SELECT value FROM meta")
+        row = c.fetchall()
+
+        last_serial = row[0][0] if row else 0
+        book_no = row[1][0] if row else 1
+
+        new_serial = last_serial + 1
+        if new_serial > 100:
+            book_no+=1
+            new_serial-=100
+
+        return book_no , new_serial
 
 
 # 📊 Optional helper (used in pagination)
