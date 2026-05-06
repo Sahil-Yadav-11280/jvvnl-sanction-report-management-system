@@ -12,8 +12,9 @@ class ViewWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.form = FormWindow
         self.setWindowTitle("View Reports")
-        self.resize(1200, 675)
+        self.resize(1340, 753.75)
 
         self.page = 0
         self.page_size = 20
@@ -25,11 +26,11 @@ class ViewWindow(QWidget):
         self.control_layout = QHBoxLayout()
 
         self.sort_box = QComboBox()
-        self.sort_box.addItems(["date", "sanction_date", "receipt_date"])
+        self.sort_box.addItems(["date"])
 
         self.filter_type = QComboBox()
         self.filter_type.addItems([
-            "None", "date", "address", "sanction_date", "jen", "receipt_date"
+            "None", "office" , "jen" ,"date", "address"
         ])
 
         self.filter_value = QLineEdit()
@@ -48,10 +49,10 @@ class ViewWindow(QWidget):
 
         # 🔹 Table
         self.table = QTableWidget()
-        self.table.setColumnCount(9)
+        self.table.setColumnCount(13)
         self.table.setHorizontalHeaderLabels(
-            ["ID", "Date", "Customer", "JEN",
-             "Receipt No", "Sanction No",
+            ["ID","Office" , "Book no" , "Serial no" , "JEN" , "Date" ,
+             "Account No" , "Customer" , "Service No", "Consumer No",
              "Download", "Edit", "Delete"]
         )
 
@@ -90,7 +91,7 @@ class ViewWindow(QWidget):
 
         ftype = self.filter_type.currentText()
 
-        if ftype in ["date", "sanction_date", "receipt_date"]:
+        if ftype == "date":
             self.filter_value = QDateEdit()
             self.filter_value.setCalendarPopup(True)
             self.filter_value.setDate(QDate.currentDate())
@@ -106,6 +107,14 @@ class ViewWindow(QWidget):
                 c.execute("SELECT DISTINCT address FROM reports")
                 addresses = [r[0] for r in c.fetchall()]
             self.filter_value.addItems(addresses)
+
+        elif ftype == "office":
+            self.filter_value = QComboBox()
+            with get_conn() as conn:
+                c = conn.cursor()
+                c.execute("SELECT DISTINCT office FROM reports")
+                offices = [r[0] for r in c.fetchall()]
+            self.filter_value.addItems(offices)
 
         else:
             self.filter_value = QLineEdit()
@@ -140,8 +149,7 @@ class ViewWindow(QWidget):
         offset = self.page * self.page_size
 
         query = """
-        SELECT id, date, customer_name, jen, receipt_number, sanction_number
-        FROM reports
+        SELECT id, office , book_no , serial_no , jen , date, account_number ,  consumer_name, service_no , consumer_no FROM reports
         """
         params = []
 
@@ -171,21 +179,21 @@ class ViewWindow(QWidget):
             btn_download.clicked.connect(
                 lambda _, rid=report_id: self.download_single(rid)
             )
-            self.table.setCellWidget(i, 6, btn_download)
+            self.table.setCellWidget(i, 10, btn_download)
 
             # Edit
             btn_edit = QPushButton("Edit")
             btn_edit.clicked.connect(
                 lambda _, rid=report_id: self.edit_report(rid)
             )
-            self.table.setCellWidget(i, 7, btn_edit)
+            self.table.setCellWidget(i, 11, btn_edit)
 
             # Delete
             btn_delete = QPushButton("Delete")
             btn_delete.clicked.connect(
                 lambda _, rid=report_id: self.delete_report(rid)
             )
-            self.table.setCellWidget(i, 8, btn_delete)
+            self.table.setCellWidget(i, 12, btn_delete)
 
         total = self.get_total_rows()
         max_page = (total - 1) // self.page_size if total else 0
@@ -220,7 +228,9 @@ class ViewWindow(QWidget):
             row = c.fetchone()
 
         if row:
-            generate_report(*row)
+            filename = f'report_{row[1]}_{row[2]}.pdf'
+            data = row[1:]
+            generate_report(data , filename)
 
     def delete_report(self, report_id):
         with get_conn() as conn:
@@ -239,39 +249,39 @@ class ViewWindow(QWidget):
         if row:
             self.form = FormWindow(None)
 
-            self.form.purpose.setText(row[3])
-            self.form.date.setDate(QDate.fromString(row[4], "dd-MM-yyyy"))
-            self.form.name.setText(row[5])
-            self.form.address.setText(row[6])
-            self.form.sanction_no.setText(row[7])
-            self.form.sanction_date.setDate(QDate.fromString(row[8], "dd-MM-yyyy"))
-            self.form.consumer_no.setText(row[9])
-            self.form.jen.setCurrentText(row[10])
-            self.form.work.setText(row[11])
-            self.form.receipt_no.setText(row[12])
-            self.form.receipt_date.setDate(QDate.fromString(row[13], "dd-MM-yyyy"))
+            self.form.office.setText(row[3])
+            self.form.jen.setCurrentText(row[4])
+            self.form.date.setDate(QDate.fromString(row[5], "dd-MM-yyyy"))
+            self.form.estimate_no.setText(row[6])
+            self.form.description.setText(row[7])
+            self.form.allocation.setText(row[8])
+            self.form.account_number.setText(row[9])
+            self.form.consumer_name.setText(row[10])
+            self.form.address.setText(row[11])
+            self.form.service_no.setText(row[12])
+            self.form.consumer_no.setText(row[13])
 
             def update():
                 with get_conn() as conn:
                     c = conn.cursor()
                     c.execute("""
                     UPDATE reports SET
-                        purpose=?, date=?, customer_name=?, address=?,
-                        sanction_number=?, sanction_date=?, consumer_number=?,
-                        jen=?, proposed_work=?, receipt_number=?, receipt_date=?
+                        office=?, date=?, jen=?, estimate_no=?,
+                        description=?, allocation=?, account_number=?,
+                        consumer_name=?, address=?, service_no=?, consumer_no=?
                     WHERE id=?
                     """, (
-                        self.form.purpose.text(),
-                        self.form.date.date().toString("dd-MM-yyyy"),
-                        self.form.name.text(),
-                        self.form.address.text(),
-                        self.form.sanction_no.text(),
-                        self.form.sanction_date.date().toString("dd-MM-yyyy"),
-                        self.form.consumer_no.text(),
+                        self.form.office.text(),
+                        self.form.date.date().toString("dd-MM-yyyy"),  # ✅ important
                         self.form.jen.currentText(),
-                        self.form.work.toPlainText(),
-                        self.form.receipt_no.text(),
-                        self.form.receipt_date.date().toString("dd-MM-yyyy"),
+                        self.form.estimate_no.text(),
+                        self.form.description.toPlainText(),
+                        self.form.allocation.text(),
+                        self.form.account_number.text(),
+                        self.form.consumer_name.text(),
+                        self.form.address.text(),
+                        self.form.service_no.text(),
+                        self.form.consumer_no.text(),
                         report_id
                     ))
 
@@ -285,6 +295,8 @@ class ViewWindow(QWidget):
             self.form.show()
 
     def download_group(self):
+        ftype = None
+        val = None
         if self.active_filter:
             ftype, val = self.active_filter
             query = f"SELECT * FROM reports WHERE {ftype}=?"
@@ -302,10 +314,10 @@ class ViewWindow(QWidget):
         merger = PdfMerger()
 
         for row in rows:
-            pdf = generate_report(*row)
+            pdf = generate_report(row[1:] , f'report_{row[1]}_{row[2]}')
             merger.append(pdf)
 
-        merger.write("group_output.pdf")
+        merger.write(f"report_{ftype}_{val}.pdf")
         merger.close()
 
         print("Group PDF created")
