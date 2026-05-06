@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QPushButton, QHBoxLayout, QComboBox, QLabel, QLineEdit, QDateEdit
+    QPushButton, QHBoxLayout, QComboBox, QLabel, QLineEdit, QDateEdit , QFileDialog , QMessageBox
 )
 from PySide6.QtCore import QDate
 from db import get_conn
@@ -230,7 +230,31 @@ class ViewWindow(QWidget):
         if row:
             filename = f'report_{row[1]}_{row[2]}.pdf'
             data = row[1:]
-            generate_report(data , filename)
+
+            filepath , selected_filter = QFileDialog.getSaveFileName(
+                self,
+                'Save single report',
+                f'{filename}',
+                ''
+            )
+
+            if filepath:
+                try:
+                    generate_report(data , filename)
+                except PermissionError:
+                    QMessageBox.warning(
+                        self,
+                        'Cannot save file',
+                        'This file is currently open in another program.\n\nPlease close it and try again.',
+                        QMessageBox.Ok
+                    )
+            else:
+                QMessageBox.information(
+                    self,
+                    'Save unsuccessful',
+                    'No path selected, save operation cancelled',
+                    QMessageBox.Ok
+                )
 
     def delete_report(self, report_id):
         with get_conn() as conn:
@@ -314,10 +338,35 @@ class ViewWindow(QWidget):
         merger = PdfMerger()
 
         for row in rows:
-            pdf = generate_report(row[1:] , f'report_{row[1]}_{row[2]}')
+            pdf = generate_report(row[1:] , f'report_{row[1]}_{row[2]}.pdf')
             merger.append(pdf)
 
-        merger.write(f"report_{ftype}_{val}.pdf")
+        filepath , selected_filter = QFileDialog.getSaveFileName(
+            self,
+            'Merged reports download',
+            f'report_{ftype}_{val}.pdf',
+            ''
+        )
+
+        if filepath:
+            try:
+                merger.write(f"report_{ftype}_{val}.pdf")
+            except PermissionError:
+                QMessageBox.warning(
+                    self,
+                    'Cannot save file',
+                    'This file is currently open in another program.\n\nPlease close it and try again.',
+                    QMessageBox.Ok
+                )
+
+        else:
+            QMessageBox.information(
+                self,
+                'Save unsuccessful',
+                'No path selected, save operation cancelled',
+                QMessageBox.Ok
+            )
+
         merger.close()
 
         print("Group PDF created")

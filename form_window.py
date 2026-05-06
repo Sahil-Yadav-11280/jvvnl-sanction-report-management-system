@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import (
     QWidget, QFormLayout, QLineEdit, QTextEdit,
-    QComboBox, QPushButton, QDateEdit
+    QComboBox, QPushButton, QDateEdit , QFileDialog , QMessageBox
 )
 from PySide6.QtCore import QDate
+from db import get_copy_book_serial
 
 
 class FormWindow(QWidget):
@@ -60,16 +61,44 @@ class FormWindow(QWidget):
 
     def submit(self):
         if self.backend:
-            self.backend.submit_form(
-                self.office.text(),
-                self.date.date().toString("dd-MM-yyyy"),  # ✅ important
-                self.jen.currentText(),
-                self.estimate_no.text(),
-                self.description.toPlainText(),
-                self.allocation.text(),
-                self.account_number.text(),
-                self.consumer_name.text(),
-                self.address.text(),
-                self.service_no.text(),
-                self.consumer_no.text()
+            book_no , serial_no = get_copy_book_serial()
+            default_path = f'report_{book_no}_{serial_no}.pdf'
+
+            file_path , selected_filter = QFileDialog.getSaveFileName(
+                self,
+                'Save your report',
+                f'{default_path}',
+                ''
             )
+            if file_path:
+                try:
+                    self.backend.submit_form(
+                        self.office.text(),
+                        self.date.date().toString("dd-MM-yyyy"),  # ✅ important
+                        self.jen.currentText(),
+                        self.estimate_no.text(),
+                        self.description.toPlainText(),
+                        self.allocation.text(),
+                        self.account_number.text(),
+                        self.consumer_name.text(),
+                        self.address.text(),
+                        self.service_no.text(),
+                        self.consumer_no.text(),
+                        file_path,
+                    )
+                    self.close()
+                except PermissionError:
+                    QMessageBox.warning(
+                        self,
+                        'Cannot save file',
+                        'This file is currently open in another program.\n\nPlease close it and try again',
+                        QMessageBox.Ok
+                    )
+            else:
+                QMessageBox.information(
+                    self,
+                    'Save Unsuccessful',
+                    'No path selected, save operation cancelled',
+                    QMessageBox.Ok
+                )
+
