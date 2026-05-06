@@ -1,124 +1,115 @@
-from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.shared import Pt, Cm
-from docx2pdf import convert
-import os
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.pagesizes import letter
 
 
-def data_setting(document, key, value):
-    data = document.add_paragraph()
-    run1 = data.add_run(f'{key}: ')
-    run1.bold = True
-    run2 = data.add_run(f'{value}')
+def create_full_sundry_job_order(data: list, filename):
+    # 1. Setup the document layout and margins
+    doc = SimpleDocTemplate(
+        filename,
+        pagesize=letter,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
 
-    for run in data.runs:
-        run.font.size = Pt(12)
-        run.font.name = 'Georgia'
+    office = data[0]
+    book_no = data[1]
+    serial_no = data[2]
+    to_jen = data[3]
+    date = data[4]
+    estimate = data[5]
+    work = data[6]
+    allocation = data[7]
+    acc_no = data[8]
+    cons_name_add = data[9]
+    service_no = data[10]
+    consumer_no = data[11]
+    Story = []
 
+    # 2. Define all Text Styles used in the document
+    title_style = ParagraphStyle('TitleStyle', fontName='Helvetica-Bold', fontSize=18, alignment=TA_CENTER,
+                                 spaceAfter=12)
+    office_style = ParagraphStyle('OfficeStyle', fontName='Helvetica', fontSize=12, alignment=TA_CENTER, spaceAfter=24)
+    order_style = ParagraphStyle('OrderStyle', fontName='Times-Bold', fontSize=14, alignment=TA_CENTER, spaceAfter=24)
 
-def generate_report(
-    report_id,
-    book_no,
-    page_no,
-    purpose,
-    date,
-    customer_name,
-    address,
-    sanction_number,
-    sanction_date,
-    consumer_number,
-    to_jen,
-    proposed_work,
-    ddr_number,
-    ddr_date
-):
-    document = Document()
+    body_style = ParagraphStyle('BodyStyle', fontName='Times-Roman', fontSize=12, alignment=TA_LEFT, spaceAfter=12)
+    body_style_no_space = ParagraphStyle('BodyStyleNoSpace', fontName='Times-Roman', fontSize=12, alignment=TA_LEFT)
 
-    para = document.add_paragraph()
-    para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = para.add_run(f"Book No: {book_no}, Page No: {page_no}")
-    run.font.size = Pt(12)
-    run.font.name = 'Georgia'
+    center_text_style = ParagraphStyle('CenterText', fontName='Times-Roman', fontSize=12, alignment=TA_CENTER,
+                                       spaceAfter=12)
+    bold_center_style = ParagraphStyle('BoldCenter', fontName='Times-Bold', fontSize=12, alignment=TA_CENTER,
+                                       spaceAfter=12)
 
-    heading = document.add_paragraph()
-    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = heading.add_run("Jaipur Vidhyut Vitaran Nigam Limited")
-    run.bold = True
-    run.font.size = Pt(18)
-    run.font.name = 'Georgia'
+    right_bold_style = ParagraphStyle('RightBold', fontName='Times-Bold', fontSize=12, alignment=TA_RIGHT, spaceAfter=8)
 
-    order = document.add_paragraph()
-    order.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = order.add_run("Sundry Job Order")
-    run.bold = True
-    run.font.size = Pt(12)
-    run.font.name = 'Georgia'
+    # Calculate exactly half the page width for the two-column layouts
+    usable_width = doc.width
+    col_width = usable_width / 2.0
 
-    pur = document.add_paragraph()
-    pur.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run1 = pur.add_run("Purpose: ")
-    run1.bold = True
-    run2 = pur.add_run(purpose)
+    # --- TOP SECTION ---
+    Story.append(Paragraph("Jaipur Vidhyut Vitaan Nigam Limited", title_style))
+    Story.append(Paragraph(f"<b>Office</b> - {office}", office_style))
+    Story.append(Paragraph("SUNDRY JOB ORDER", order_style))
 
-    for run in pur.runs:
-        run.font.size = Pt(12)
-        run.font.name = 'Georgia'
+    # --- FIRST DATA TABLE (Top Fields) ---
+    table_data_1 = [
+        [
+            Paragraph(f"<b>Book No:</b> {book_no}", body_style_no_space),
+            Paragraph(f"<b>Serial No:</b> {serial_no}", body_style_no_space)
+        ],
+        [
+            Paragraph(f"<b>To:</b> {to_jen}", body_style_no_space),
+            Paragraph(f"<b>Date:</b> {date}", body_style_no_space)
+        ],
+        [
+            "",  # Empty space
+            Paragraph(f"<b>Estimate no:</b> {estimate}", body_style_no_space)
+        ]
+    ]
+    t1 = Table(table_data_1, colWidths=[col_width, col_width])
+    t1.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15)
+    ]))
+    Story.append(t1)
 
-    document.add_paragraph(" ")
+    # Add some space before the description
+    Story.append(Spacer(1, 30))
 
-    data_setting(document, 'Date', date)
-    data_setting(document, 'Customer Name', customer_name)
-    data_setting(document, 'Address', address)
-    data_setting(document, 'Sanction Number', sanction_number)
-    data_setting(document, 'Sanction Date', sanction_date)
-    data_setting(document, 'Consumer Number', consumer_number)
-    data_setting(document, 'To (JEN)', to_jen)
+    # --- MIDDLE SECTION (Work Description) ---
+    Story.append(Paragraph("Please execute the following work and on completion report as under: -", center_text_style))
+    Story.append(Paragraph("DESCRIPTION OF WORK", bold_center_style))
+    Story.append(Paragraph(f"{work}", center_text_style))
 
-    document.add_paragraph(" ")
+    # Large vertical space to simulate the empty area for writing/data
+    Story.append(Spacer(1, 80))
 
-    table = document.add_table(rows=2, cols=1)
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.style = 'Table Grid'
+    # --- LOWER FIELDS ---
+    Story.append(Paragraph(f"<b>Allocation:</b> {allocation}", body_style))
+    Story.append(Paragraph(f"<b>Account Number:</b> {acc_no}", body_style))
+    Story.append(Paragraph(f"<b>Consumer name and address:</b> {cons_name_add}", body_style))
 
-    title_cell = table.cell(0, 0)
-    para = title_cell.paragraphs[0]
-    para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = para.add_run('Proposed Work')
-    run.bold = True
-    run.font.size = Pt(12)
-    run.font.name = 'Georgia'
+    # --- SECOND DATA TABLE (Bottom Fields) ---
+    table_data_2 = [
+        [
+            Paragraph(f"<b>Service no:</b> {service_no}", body_style_no_space),
+            Paragraph(f"<b>Consumer no:</b> {consumer_no}", body_style_no_space)
+        ]
+    ]
+    t2 = Table(table_data_2, colWidths=[col_width, col_width])
+    t2.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    Story.append(t2)
 
-    data_cell = table.cell(1, 0)
-    para = data_cell.paragraphs[0]
-    para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = para.add_run(proposed_work)
-    run.font.size = Pt(12)
-    run.font.name = 'Georgia'
+    # Large space to push the signature block to the bottom of the page
+    Story.append(Spacer(1, 100))
 
-    document.add_paragraph(" ")
+    # --- SIGNATURE BLOCK ---
+    Story.append(Paragraph("Assistant Engineer (O&M)", right_bold_style))
+    Story.append(Paragraph("JVVNL Behror Rural", right_bold_style))
 
-    data_setting(document, 'Demand Deposit Receipt Number', ddr_number)
-    data_setting(document, 'Demand Deposit Receipt Date', ddr_date)
-
-    document.add_paragraph(" ")
-
-    if os.path.exists("sig.jpg"):
-        document.add_picture("sig.jpg", width=Cm(3))
-
-    sig = document.add_paragraph()
-    run = sig.add_run("Signature")
-    run.bold = True
-    run.font.size = Pt(12)
-    run.font.name = 'Georgia'
-
-    docx_file = f"report_{report_id}.docx"
-    pdf_file = f"report_{report_id}.pdf"
-
-    document.save(docx_file)
-    convert(docx_file, pdf_file)
-
-    if os.path.exists(pdf_file):
-        os.remove(docx_file)
-
-    return pdf_file
+    # 3. Build and save the document
+    doc.build(Story)
+    print(f"File created successfully at {filename}")
