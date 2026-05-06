@@ -47,7 +47,7 @@ def generate_report(data: list, filename):
 
     # Calculate exactly half the page width for the two-column layouts
     usable_width = doc.width
-    col_width = usable_width / 2.0
+    col_width = usable_width / 3.0
 
     # --- TOP SECTION ---
     Story.append(Paragraph("Jaipur Vidhyut Vitaan Nigam Limited", title_style))
@@ -58,14 +58,17 @@ def generate_report(data: list, filename):
     table_data_1 = [
         [
             Paragraph(f"<b>Book No:</b> {book_no}", body_style_no_space),
+            '',
             Paragraph(f"<b>Serial No:</b> {serial_no}", body_style_no_space)
         ],
         [
             Paragraph(f"<b>To:</b> {to_jen}", body_style_no_space),
+            '',
             Paragraph(f"<b>Date:</b> {date}", body_style_no_space)
         ],
         [
             "",  # Empty space
+            '',
             Paragraph(f"<b>Estimate no:</b> {estimate}", body_style_no_space)
         ]
     ]
@@ -96,6 +99,7 @@ def generate_report(data: list, filename):
     table_data_2 = [
         [
             Paragraph(f"<b>Service no:</b> {service_no}", body_style_no_space),
+            '',
             Paragraph(f"<b>Consumer no:</b> {consumer_no}", body_style_no_space)
         ]
     ]
