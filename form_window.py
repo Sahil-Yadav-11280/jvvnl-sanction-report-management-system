@@ -27,6 +27,9 @@ class FormWindow(QWidget):
         self.jen.addItems(["A", "B", "C", "D"])
 
         self.estimate_no = QLineEdit()
+        self.estimate_date = QDateEdit()
+        self.estimate_date.setCalendarPopup(True)
+        self.estimate_date.setDate(QDate.currentDate())
 
         self.description = QTextEdit()
 
@@ -36,6 +39,8 @@ class FormWindow(QWidget):
         self.consumer_name = QLineEdit()
         self.address = QLineEdit()
 
+        self.mobile_no = QLineEdit()
+
         self.service_no = QLineEdit()
         self.consumer_no = QLineEdit()
 
@@ -43,12 +48,14 @@ class FormWindow(QWidget):
         layout.addRow("Office", self.office)
         layout.addRow("Date", self.date)
         layout.addRow("JEN", self.jen)
-        layout.addRow("Estimate No", self.estimate_no)
+        layout.addRow("Estimate No (optional)", self.estimate_no)
+        layout.addRow("Estimate Date (optional)" , self.estimate_date)
         layout.addRow("Description of Work", self.description)
         layout.addRow("Allocation", self.allocation)
         layout.addRow("Account Number", self.account_number)
         layout.addRow("Consumer Name", self.consumer_name)
         layout.addRow("Address", self.address)
+        layout.addRow("Mobile No", self.mobile_no)
         layout.addRow("Service No", self.service_no)
         layout.addRow("Consumer No", self.consumer_no)
 
@@ -61,44 +68,70 @@ class FormWindow(QWidget):
 
     def submit(self):
         if self.backend:
-            book_no , serial_no = get_copy_book_serial()
-            default_path = f'report_{book_no}_{serial_no}.pdf'
 
-            file_path , selected_filter = QFileDialog.getSaveFileName(
-                self,
-                'Save your report',
-                f'{default_path}',
-                ''
-            )
-            if file_path:
-                try:
-                    self.backend.submit_form(
-                        self.office.text(),
-                        self.date.date().toString("dd-MM-yyyy"),  # ✅ important
-                        self.jen.currentText(),
-                        self.estimate_no.text(),
-                        self.description.toPlainText(),
-                        self.allocation.text(),
-                        self.account_number.text(),
-                        self.consumer_name.text(),
-                        self.address.text(),
-                        self.service_no.text(),
-                        self.consumer_no.text(),
-                        file_path,
-                    )
-                    self.close()
-                except PermissionError:
-                    QMessageBox.warning(
+            office = self.office.text()
+            date = self.date.date().toString("dd-MM-yyyy")
+            jen = self.jen.currentText()
+            estimate_no = self.estimate_no.text()
+            estimate_date = self.estimate_date.date().toString("dd-MM-yyyy")
+            description = self.description.toPlainText()
+            allocation = self.allocation.text()
+            account_number = self.account_number.text()
+            consumer_name = self.consumer_name.text()
+            address = self.address.text()
+            mobile_no = self.mobile_no.text()
+            service_no = self.service_no.text()
+            consumer_no = self.consumer_no.text()
+
+            if office and date and jen and description and allocation and account_number and consumer_name and address and mobile_no and service_no and consumer_no:
+
+                book_no , serial_no = get_copy_book_serial()
+                default_path = f'report_{book_no}_{serial_no}.pdf'
+
+                file_path , selected_filter = QFileDialog.getSaveFileName(
+                    self,
+                    'Save your report',
+                    f'{default_path}',
+                    ''
+                )
+                if file_path:
+                    try:
+                            self.backend.submit_form(
+                                office,
+                                date,
+                                jen,
+                                estimate_no,
+                                estimate_date,
+                                description,
+                                allocation,
+                                account_number,
+                                consumer_name,
+                                address,
+                                mobile_no,
+                                service_no,
+                                consumer_no,
+                                file_path,
+                            )
+                            self.close()
+
+                    except PermissionError:
+                        QMessageBox.warning(
+                            self,
+                            'Cannot save file',
+                            'This file is currently open in another program.\n\nPlease close it and try again',
+                            QMessageBox.Ok
+                        )
+                else:
+                    QMessageBox.information(
                         self,
-                        'Cannot save file',
-                        'This file is currently open in another program.\n\nPlease close it and try again',
+                        'Save Unsuccessful',
+                        'No path selected, save operation cancelled',
                         QMessageBox.Ok
                     )
             else:
-                QMessageBox.information(
+                QMessageBox.warning(
                     self,
-                    'Save Unsuccessful',
-                    'No path selected, save operation cancelled',
+                    'Incomplete details',
+                    'Cannot submit form as one or more required fields are empty',
                     QMessageBox.Ok
                 )
-
