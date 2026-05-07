@@ -1,7 +1,12 @@
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import letter
+
+
+pdfmetrics.registerFont(TTFont('Arial-Black', 'C:\\Windows\\Fonts\\ariblk.ttf'))
 
 
 def generate_report(data: list, filename):
@@ -20,17 +25,19 @@ def generate_report(data: list, filename):
     office = data[2]
     to_jen = data[3]
     date = data[4]
-    estimate = data[5]
-    description = data[6]
-    allocation = data[7]
-    acc_no = data[8]
-    cons_name_add = data[9]
-    service_no = data[10]
-    consumer_no = data[11]
+    estimate_no = data[5]
+    estimate_date = data[6]
+    description = data[7]
+    allocation = data[8]
+    acc_no = data[9]
+    cons_name_add = data[10]
+    mobile_no = data[11]
+    service_no = data[12]
+    consumer_no = data[13]
     Story = []
 
     # 2. Define all Text Styles used in the document
-    title_style = ParagraphStyle('TitleStyle', fontName='Helvetica-Bold', fontSize=18, alignment=TA_CENTER,
+    title_style = ParagraphStyle('TitleStyle', fontName='Arial-Black', fontSize=18, alignment=TA_CENTER,
                                  spaceAfter=12)
     office_style = ParagraphStyle('OfficeStyle', fontName='Helvetica', fontSize=12, alignment=TA_CENTER, spaceAfter=24)
     order_style = ParagraphStyle('OrderStyle', fontName='Times-Bold', fontSize=14, alignment=TA_CENTER, spaceAfter=24)
@@ -67,9 +74,9 @@ def generate_report(data: list, filename):
             Paragraph(f"<b>Date:</b> {date}", body_style_no_space)
         ],
         [
-            "",  # Empty space
+            Paragraph(f"<b>Estimate no:</b> {estimate_no}", body_style_no_space),
             '',
-            Paragraph(f"<b>Estimate no:</b> {estimate}", body_style_no_space)
+            Paragraph(f"<b>Estimate date:</b> {estimate_date}", body_style_no_space)
         ]
     ]
     t1 = Table(table_data_1, colWidths=[col_width, col_width])
@@ -94,6 +101,7 @@ def generate_report(data: list, filename):
     Story.append(Paragraph(f"<b>Allocation:</b> {allocation}", body_style))
     Story.append(Paragraph(f"<b>Account Number:</b> {acc_no}", body_style))
     Story.append(Paragraph(f"<b>Consumer name and address:</b> {cons_name_add}", body_style))
+    Story.append(Paragraph(f"<b>Consumer Mobile Number:</b> {mobile_no}", body_style))
 
     # --- SECOND DATA TABLE (Bottom Fields) ---
     table_data_2 = [
