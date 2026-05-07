@@ -12,11 +12,13 @@ class Backend:
         date,
         jen,
         estimate_no,
+        estimate_date,
         description,
         allocation,
         account_number,
         consumer_name,
         address,
+        mobile_no,
         service_no,
         consumer_no,
         filepath,
@@ -30,20 +32,20 @@ class Backend:
             c.execute("""
             INSERT INTO reports (
                 book_no, serial_no, office, jen, date,
-                estimate_no, description, allocation,
+                estimate_no, estimate_date, description, allocation,
                 account_number, consumer_name, address,
-                service_no, consumer_no
+                mobile_no, service_no, consumer_no
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?)
             """, (
                 book_no, serial_no, office, jen, date,
-                estimate_no, description, allocation,
+                estimate_no, estimate_date, description, allocation,
                 account_number, consumer_name, address,
-                service_no, consumer_no
+                mobile_no, service_no, consumer_no
             ))
             conn.commit()
 
-        data = [book_no , serial_no , office , jen , date , estimate_no , description , allocation , account_number , f'{consumer_name}, {address}' , service_no  , consumer_no]
+        data = [book_no , serial_no , office , jen , date , estimate_no , estimate_date , description , allocation , account_number , f'{consumer_name}, {address}' , mobile_no , service_no  , consumer_no]
 
         pdf_file = generate_report(data, filepath)
 
