@@ -277,42 +277,68 @@ class ViewWindow(QWidget):
             self.form.jen.setCurrentText(row[4])
             self.form.date.setDate(QDate.fromString(row[5], "dd-MM-yyyy"))
             self.form.estimate_no.setText(row[6])
-            self.form.description.setText(row[7])
-            self.form.allocation.setText(row[8])
-            self.form.account_number.setText(row[9])
-            self.form.consumer_name.setText(row[10])
-            self.form.address.setText(row[11])
-            self.form.service_no.setText(row[12])
-            self.form.consumer_no.setText(row[13])
+            self.form.estimate_date.setDate(QDate.fromString(row[7], "dd-MM-yyyy"))
+            self.form.description.setText(row[8])
+            self.form.allocation.setText(row[9])
+            self.form.account_number.setText(row[10])
+            self.form.consumer_name.setText(row[11])
+            self.form.address.setText(row[12])
+            self.form.mobile_no.setText(row[13])
+            self.form.service_no.setText(row[14])
+            self.form.consumer_no.setText(row[15])
 
             def update():
-                with get_conn() as conn:
-                    c = conn.cursor()
-                    c.execute("""
-                    UPDATE reports SET
-                        office=?, date=?, jen=?, estimate_no=?,
-                        description=?, allocation=?, account_number=?,
-                        consumer_name=?, address=?, service_no=?, consumer_no=?
-                    WHERE id=?
-                    """, (
-                        self.form.office.text(),
-                        self.form.date.date().toString("dd-MM-yyyy"),  # ✅ important
-                        self.form.jen.currentText(),
-                        self.form.estimate_no.text(),
-                        self.form.description.toPlainText(),
-                        self.form.allocation.text(),
-                        self.form.account_number.text(),
-                        self.form.consumer_name.text(),
-                        self.form.address.text(),
-                        self.form.service_no.text(),
-                        self.form.consumer_no.text(),
-                        report_id
-                    ))
 
-                    conn.commit()
+                office = self.form.office.text()
+                date = self.form.date.date().toString("dd-MM-yyyy")
+                jen = self.form.jen.currentText()
+                estimate_no = self.form.estimate_no.text()
+                estimate_date = self.form.estimate_date.date().toString("dd-MM-yyyy")
+                description = self.form.description.toPlainText()
+                allocation = self.form.allocation.text()
+                account_number = self.form.account_number.text()
+                consumer_name = self.form.consumer_name.text()
+                address = self.form.address.text()
+                mobile_no = self.form.mobile_no.text()
+                service_no = self.form.service_no.text()
+                consumer_no = self.form.consumer_no.text()
 
-                self.form.close()
-                self.load_data()
+                if office and date and jen and description and allocation and account_number and consumer_name and address and mobile_no and service_no and consumer_no:
+                    with get_conn() as conn:
+                        c = conn.cursor()
+                        c.execute("""
+                        UPDATE reports SET
+                            office=?, date=?, jen=?, estimate_no=?, estimate_date=?,
+                            description=?, allocation=?, account_number=?,
+                            consumer_name=?, address=?, mobile_no=?, service_no=?, consumer_no=?
+                        WHERE id=?
+                        """, (
+                            office,
+                            date,
+                            jen,
+                            estimate_no,
+                            estimate_date,
+                            description,
+                            allocation,
+                            account_number,
+                            consumer_name,
+                            address,
+                            mobile_no,
+                            service_no,
+                            consumer_no,
+                            report_id
+                        ))
+
+                        conn.commit()
+                        self.form.close()
+                        self.load_data()
+                else:
+                    QMessageBox.warning(
+                        self.form,
+                        'Incomplete details',
+                        'Cannot submit form as one or more required fields are empty',
+                        QMessageBox.Ok
+                    )
 
             self.form.submit_btn.clicked.disconnect()
             self.form.submit_btn.clicked.connect(update)
