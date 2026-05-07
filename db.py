@@ -24,6 +24,7 @@ def init_db():
 
             date TEXT,
             estimate_no TEXT,
+            estimate_date TEXT,
 
             description TEXT,
 
@@ -32,6 +33,8 @@ def init_db():
 
             consumer_name TEXT,
             address TEXT,
+            
+            mobile_no TEXT,
 
             service_no TEXT,
             consumer_no TEXT
