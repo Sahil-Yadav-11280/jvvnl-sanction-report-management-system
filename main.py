@@ -1,13 +1,10 @@
 import sys
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton,
-    QFormLayout, QLineEdit, QTextEdit, QComboBox
 )
-from PySide6.QtWidgets import QDateEdit
-from PySide6.QtCore import QDate
+
 
 from backend import Backend
-from view_window import ViewWindow
 from form_window import FormWindow
 from view_window import ViewWindow
 
